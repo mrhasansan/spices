@@ -5,7 +5,7 @@ const app = new Hono();
 
 app.get("/", (c) => {
   return c.json({
-    message: "Spices API",
+    message: "welcome to REST API Spices ",
   });
 });
 
