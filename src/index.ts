@@ -30,4 +30,5 @@ app.get("/spices/:id", (c) => {
   return c.json(spice);
 });
 
+console.log(`API Spices is running`);
 export default app;
