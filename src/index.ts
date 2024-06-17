@@ -125,5 +125,12 @@ app.put("/spices/:id", async (c) => {
   return c.json(newSpice);
 });
 
+app.post("/spices/seeded", async (c) => {
+  spices = dataSpices;
+  return c.json({
+    message: "Many spices data has been seeded",
+  });
+});
+
 console.log(`API Spices is running`);
 export default app;
