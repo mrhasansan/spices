@@ -1,6 +1,6 @@
 services:
   backend:
-    image: example-backend
+    image: spices-backend
     build:
       context: .
     ports:
