@@ -1,4 +1,16 @@
-export const dataSpices = [
+export type Spices = {
+  id: number;
+  name: string;
+  description: string;
+  origin: string;
+  usage: string;
+  aroma: string;
+  flavor: string;
+  healthBenefits: string;
+  image: string;
+};
+
+export const dataSpices: Spices[] = [
   {
     id: 1,
     name: "galangal",
