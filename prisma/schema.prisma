@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Spices {
+model Spice {
   id             Int       @id @default(autoincrement())
   name           String    @db.VarChar(255)
   description    String    @db.VarChar(500)
@@ -25,16 +25,16 @@ model Spices {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   aromas         Aroma[]
 
-  @@map("spices")
+  @@map("spice")
 }
 
 model Aroma {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(255)
-  spicesId  Int      @map("spices_id")
+  spiceId  Int      @map("spice_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  spices    Spices   @relation(fields: [spicesId], references: [id])
+  spice    Spice   @relation(fields: [spiceId], references: [id])
 
-  @@map("aromas")
+  @@map("aroma")
 }

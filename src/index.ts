@@ -1,7 +1,5 @@
 import { Hono } from "hono";
-import { type Spices, dataSpices } from "./data/spices";
-
-let spices = dataSpices;
+import { prisma } from "./libs/prisma";
 
 const app = new Hono();
 
@@ -12,16 +10,17 @@ app.get("/", (c) => {
   });
 });
 
-app.get("/spices", (c) => {
-  if (spices.length <= 0) {
-    return c.json({
-      message: "There is no spices",
-    });
+app.get("/spices", async (c) => {
+  try {
+    const spices = await prisma.spice.findMany();
+    return c.json(spices);
+  } catch (error) {
+    console.error("Error fetching spices:", error);
+    return c.json({ error: "Error fetching spices" }, 500);
   }
-  return c.json(spices);
 });
 
-app.get("/spices/:id", (c) => {
+app.get("/spices/:id", async (c) => {
   const id = Number(c.req.param("id"));
 
   if (!id) {
@@ -29,23 +28,37 @@ app.get("/spices/:id", (c) => {
       message: "There is no Id Spice",
     });
   }
-  const spice = spices.find((spice) => spice.id === id);
-  if (!spice) {
-    return c.json({
-      message: "Spice not found",
+  try {
+    const spice = await prisma.spice.findUnique({
+      where: { id: id },
     });
+    if (!spice) {
+      c.status(404);
+      return c.json({
+        message: "Spice not found",
+      });
+    }
+    return c.json(spice);
+  } catch (error) {
+    console.error("Error fetching spice:", error); // Added error handling
+    return c.json({ error: "Error fetching spice" }, 500);
   }
-  return c.json(spice);
 });
 
 app.delete("/spices", async (c) => {
-  spices = [];
-  return c.json({
-    message: "All Spices data have been deleted",
-  });
+  try {
+    await prisma.spice.deleteMany();
+
+    return c.json({
+      message: "All Spices data have been deleted",
+    });
+  } catch (error) {
+    console.error("Error deleting spices:", error); // Added error handling
+    return c.json({ error: "Error deleting spices" }, 500);
+  }
 });
 
-app.delete("/spices/:id", (c) => {
+app.delete("/spices/:id", async (c) => {
   const id = Number(c.req.param("id"));
 
   if (!id) {
@@ -53,37 +66,43 @@ app.delete("/spices/:id", (c) => {
       message: "There is no Id Spice",
     });
   }
-  const spice = spices.find((spice) => spice.id === id);
-  if (!spice) {
-    return c.json({
-      message: "Spice not found",
+
+  try {
+    const deletedSpice = await prisma.spice.delete({
+      where: { id: id },
     });
+    return c.json({
+      message: `Spice with ${id} has been deleted`,
+      deletedSpice,
+    });
+  } catch (error) {
+    console.error("Error deleting spice:", error);
+    return c.json({ error: "Error deleting spice" }, 500);
   }
-  spices = spices.filter((spice) => spice.id !== id);
-  return c.json({
-    message: `Spice with ${id} has been deleted`,
-    deletedSpices: spice,
-  });
 });
 
 app.post("/spices", async (c) => {
   const body = await c.req.json();
+  console.log("Received body:", body); // Log the received body
 
-  const newSpice: Spices = {
-    id: spices[spices.length - 1].id + 1,
-    name: body.name,
-    description: body.description,
-    origin: body.origin,
-    usage: body.usage,
-    aroma: body.aroma,
-    flavor: body.flavor,
-    healthBenefits: body.healthBenefits,
-    image: body.image,
-  };
-
-  const updateSpices = [...spices, newSpice];
-  spices = updateSpices;
-  return c.json(newSpice);
+  try {
+    const newSpice = prisma.spice.create({
+      data: {
+        name: String(body.name),
+        description: String(body.description),
+        origin: String(body.origin),
+        usage: String(body.usage),
+        flavor: String(body.flavor),
+        health_Benefits: String(body.health_Benefits),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+    return c.json(newSpice);
+  } catch (error) {
+    console.error("Error creating spice:", error);
+    return c.json({ error: "Error creating spice" }, 500);
+  }
 });
 
 app.put("/spices/:id", async (c) => {
@@ -94,42 +113,25 @@ app.put("/spices/:id", async (c) => {
       message: "There is no Id Spice",
     });
   }
-  const spice = spices.find((spice) => spice.id === id);
-  if (!spice) {
-    return c.json({
-      message: "Spice not found",
-    });
-  }
   const body = await c.req.json();
+  try {
+    const newSpice = await prisma.spice.update({
+      where: { id },
+      data: {
+        name: body.name ? String(body.name) : undefined,
+        description: body.description ? String(body.description) : undefined,
+        origin: body.origin ? String(body.origin) : undefined,
+        usage: body.usage ? String(body.usage) : undefined,
+        flavor: body.flavor ? String(body.flavor) : undefined,
+        health_Benefits: body.healthBenefits ? String(body.healthBenefits) : undefined,
+      },
+    });
 
-  const newSpice: Spices = {
-    id: spice.id,
-    name: body.name,
-    description: body.description,
-    origin: body.origin,
-    usage: body.usage,
-    aroma: body.aroma,
-    flavor: body.flavor,
-    healthBenefits: body.healthBenefits,
-    image: body.image,
-  };
-
-  const updateSpices = spices.map((spice) => {
-    if (spice.id === id) {
-      return newSpice;
-    } else {
-      return spice;
-    }
-  });
-  spices = updateSpices;
-  return c.json(newSpice);
-});
-
-app.post("/spices/seeded", async (c) => {
-  spices = dataSpices;
-  return c.json({
-    message: "Many spices data has been seeded",
-  });
+    return c.json(newSpice);
+  } catch (error) {
+    console.error("Error updating spice:", error);
+    return c.json({ error: "Error updating spice" }, 500);
+  }
 });
 
 console.log(`API Spices is running`);
