@@ -86,7 +86,7 @@ app.post("/spices", async (c) => {
   console.log("Received body:", body); // Log the received body
 
   try {
-    const newSpice = prisma.spice.create({
+    const newSpice = await prisma.spice.create({
       data: {
         name: String(body.name),
         description: String(body.description),
