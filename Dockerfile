@@ -4,16 +4,11 @@ FROM oven/bun:latest
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and bun.lockb
-COPY package.json bun.lockb ./
-
-# Install dependencies
-RUN bun install
-
 # Copy the rest of the application code
 COPY . .
 
-
+# Install dependencies
+RUN bun install
 
 # Command to run the application
 CMD ["bun", "start"]
